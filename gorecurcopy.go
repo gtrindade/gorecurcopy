@@ -12,13 +12,26 @@ import (
 	"path/filepath"
 )
 
+func isExcluded(entry string, exclude []string) bool {
+	for _, name := range exclude {
+		if name == entry {
+			return true
+		}
+	}
+	return false
+}
+
 // CopyDirectory recursively copies a src directory to a destination.
-func CopyDirectory(src, dst string) error {
+func CopyDirectory(src, dst string, exclude []string) error {
 	entries, err := ioutil.ReadDir(src)
 	if err != nil {
 		return err
 	}
 	for _, entry := range entries {
+		if isExcluded(entry.Name(), exclude) {
+			continue
+		}
+
 		sourcePath := filepath.Join(src, entry.Name())
 		destPath := filepath.Join(dst, entry.Name())
 
@@ -32,7 +45,7 @@ func CopyDirectory(src, dst string) error {
 			if err := createDir(destPath, 0755); err != nil {
 				return err
 			}
-			if err := CopyDirectory(sourcePath, destPath); err != nil {
+			if err := CopyDirectory(sourcePath, destPath, exclude); err != nil {
 				return err
 			}
 		case os.ModeSymlink:

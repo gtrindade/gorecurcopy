@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -19,8 +20,9 @@ func TestRecursiveCopy(t *testing.T) {
 		t.Errorf("unable to remove test destination directory, %s", err)
 	}
 
+	excludedFile := "nope.txt"
 	if err := CopyDirectory(
-		filepath.Join(testDir, "test1"), filepath.Join(testDest, "test1"),
+		filepath.Join(testDir, "test1"), filepath.Join(testDest, "test1"), []string{excludedFile},
 	); err != nil {
 		t.Errorf("copying error, %s", err)
 	}
@@ -29,6 +31,9 @@ func TestRecursiveCopy(t *testing.T) {
 
 	root := filepath.Join(testDest, "test1")
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if strings.Contains(path, excludedFile) {
+			t.Errorf("excluded entry shouldn't be copied")
+		}
 		files = append(files, path)
 		return nil
 	})
